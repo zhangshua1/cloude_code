@@ -1,0 +1,35 @@
+# 窗口
+CELL_SIZE = 30
+GRID_WIDTH = 20
+GRID_HEIGHT = 20
+WINDOW_WIDTH = CELL_SIZE * GRID_WIDTH
+WINDOW_HEIGHT = CELL_SIZE * GRID_HEIGHT + 60  # 顶部留信息栏
+
+# 速度
+INITIAL_FPS = 10
+SPEED_INCREMENT = 1          # 每次加速增加的 FPS
+SPEED_UP_EVERY = 5           # 每吃 N 个食物加速一次
+MAX_FPS = 25
+
+# 颜色
+BG_COLOR = (20, 30, 20)
+GRID_COLOR = (30, 45, 30)
+SNAKE_HEAD_COLOR = (100, 220, 100)
+SNAKE_BODY_COLOR = (60, 180, 60)
+FOOD_COLOR = (255, 80, 80)
+FOOD_GLOW_COLOR = (255, 140, 140)
+TEXT_COLOR = (220, 220, 220)
+SCORE_COLOR = (255, 215, 0)
+OVERLAY_COLOR = (0, 0, 0, 160)
+
+# 方向
+UP = (0, -1)
+DOWN = (0, 1)
+LEFT = (-1, 0)
+RIGHT = (1, 0)
+
+# 最高分文件
+HIGH_SCORE_FILE = "high_score.json"
+
+# 信息栏高度
+INFO_BAR_HEIGHT = 60
