@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__claw__claw_bash",
+      "mcp__claw__claw_read",
+      "mcp__claw__claw_ls",
+      "mcp__claw__claw_grep",
+      "mcp__claw__claw_glob",
+      "mcp__drawio__create_diagram",
+      "mcp__drawio__search_shapes"
+    ]
+  }
+}
