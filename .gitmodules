@@ -1,0 +1,6 @@
+[submodule "PenguinBotV2"]
+	path = PenguinBotV2
+	url = git@github.com:zhangshua1/PenguinBotV2.git
+[submodule "PenguinBotV3"]
+	path = PenguinBotV3
+	url = git@github.com:zhangshua1/PenguinBotV3.git
