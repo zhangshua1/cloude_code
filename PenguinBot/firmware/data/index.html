@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>PenguinBot Control</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <h1>PenguinBot</h1>
+  <div id="status-bar">
+    <span id="ws-status" class="dot offline"></span>
+    <span id="batt-indicator">--%</span>
+    <span id="uptime-display">--:--:--</span>
+    <button id="theme-toggle" title="切换主题">🌓</button>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button class="tab active" data-tab="dash">仪表盘</button>
+  <button class="tab" data-tab="pid">PID 调参</button>
+  <button class="tab" data-tab="servo">舵机</button>
+  <button class="tab" data-tab="move">移动</button>
+  <button class="tab" data-tab="system">系统</button>
+  <button class="tab" data-tab="chat">AI 对话</button>
+</nav>
+
+<!-- ============ 仪表盘 ============ -->
+<section id="tab-dash" class="tab-content active">
+  <div class="dash-grid">
+    <div class="card">
+      <h3>姿态</h3>
+      <canvas id="attitude-canvas" width="240" height="240"></canvas>
+    </div>
+    <div class="card">
+      <h3>实时数据</h3>
+      <div id="telemetry">
+        <div class="t-row"><span>俯仰角</span><span id="t-angle">--</span></div>
+        <div class="t-row"><span>角速度</span><span id="t-gyro">--</span></div>
+        <div class="t-row"><span>左电机</span><span id="t-lpwm">--</span></div>
+        <div class="t-row"><span>右电机</span><span id="t-rpwm">--</span></div>
+        <div class="t-row"><span>电池</span><span id="t-bat">--</span></div>
+        <div class="t-row"><span>WiFi</span><span id="t-rssi">--</span></div>
+        <div class="t-row"><span>堆内存</span><span id="t-heap">--</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>控制</h3>
+      <div class="quick-ctrl">
+        <button id="btn-stand">站立</button>
+        <button id="btn-rest">休息</button>
+        <button id="btn-clear">清除错误</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PID 调参 ============ -->
+<section id="tab-pid" class="tab-content">
+  <div class="card">
+    <h3>角度环 (外环)</h3>
+    <div class="pid-row"><label>Kp <span id="a-kp-v">35.0</span></label>
+      <input type="range" id="a-kp" min="0" max="100" step="0.1" value="35">
+    </div>
+    <div class="pid-row"><label>Ki <span id="a-ki-v">4.0</span></label>
+      <input type="range" id="a-ki" min="0" max="20" step="0.01" value="4">
+    </div>
+    <div class="pid-row"><label>Kd <span id="a-kd-v">0.3</span></label>
+      <input type="range" id="a-kd" min="0" max="5" step="0.01" value="0.3">
+    </div>
+  </div>
+  <div class="card">
+    <h3>角速度环 (内环)</h3>
+    <div class="pid-row"><label>Kp <span id="r-kp-v">0.8</span></label>
+      <input type="range" id="r-kp" min="0" max="5" step="0.01" value="0.8">
+    </div>
+    <div class="pid-row"><label>Ki <span id="r-ki-v">0.15</span></label>
+      <input type="range" id="r-ki" min="0" max="2" step="0.01" value="0.15">
+    </div>
+    <div class="pid-row"><label>Kd <span id="r-kd-v">0.01</span></label>
+      <input type="range" id="r-kd" min="0" max="1" step="0.001" value="0.01">
+    </div>
+  </div>
+  <div class="card">
+    <h3>响应曲线</h3>
+    <canvas id="pid-chart" width="600" height="200"></canvas>
+  </div>
+  <button id="btn-pid-save" class="btn-primary">保存 PID 到 Flash</button>
+</section>
+
+<!-- ============ 舵机控制 ============ -->
+<section id="tab-servo" class="tab-content">
+  <div class="servo-grid">
+    <div class="card" v-for="(name, i) in ['头摇头','左髋','左膝','右髋','右膝']">
+      <h4>{{name}}</h4>
+      <input type="range" class="servo-slider" :data-ch="i" min="30" max="150" value="90">
+      <span class="servo-val" :data-ch="i">90°</span>
+    </div>
+  </div>
+  <div class="card">
+    <h3>预设动作</h3>
+    <div class="preset-btns">
+      <button onclick="send({cmd:'animation',params:{name:'wave'}})">挥手</button>
+      <button onclick="send({cmd:'animation',params:{name:'dance'}})">跳舞</button>
+      <button onclick="send({cmd:'animation',params:{name:'crouch'}})">蹲下</button>
+      <button onclick="send({cmd:'animation',params:{name:'stretch'}})">伸展</button>
+      <button onclick="send({cmd:'animation',params:{name:'look'}})">张望</button>
+      <button onclick="send({cmd:'animation',params:{name:'idle'}})">待机</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 移动控制 ============ -->
+<section id="tab-move" class="tab-content">
+  <div class="move-container">
+    <div class="card">
+      <h3>方向键</h3>
+      <div class="dpad">
+        <button class="dpad-btn" data-dir="forward">▲</button>
+        <button class="dpad-btn" data-dir="left">◀</button>
+        <button class="dpad-btn" data-dir="stop">■</button>
+        <button class="dpad-btn" data-dir="right">▶</button>
+        <button class="dpad-btn" data-dir="backward">▼</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>速度调节</h3>
+      <input type="range" id="speed-slider" min="20" max="255" value="100">
+      <span id="speed-val">100</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 系统 ============ -->
+<section id="tab-system" class="tab-content">
+  <div class="card">
+    <h3>日志</h3>
+    <pre id="log-view">加载中...</pre>
+    <button id="btn-refresh-log">刷新日志</button>
+    <button id="btn-clear-log">清除日志</button>
+  </div>
+  <div class="card">
+    <h3>操作</h3>
+    <button id="btn-restart" class="btn-danger">重启机器人</button>
+  </div>
+</section>
+
+<!-- ============ AI 对话 ============ -->
+<section id="tab-chat" class="tab-content">
+  <div class="card chat-container">
+    <div id="chat-messages">
+      <div class="chat-msg system">PenguinBot 已上线！按机器人上的 BOOT 键或在这里打字和我聊天吧~</div>
+    </div>
+    <div id="conv-status" class="conv-idle">待机中</div>
+  </div>
+  <div class="chat-input-row">
+    <input type="text" id="chat-input" placeholder="输入消息，回车发送..." maxlength="200">
+    <button id="btn-chat-send">发送</button>
+    <button id="btn-chat-clear">新对话</button>
+    <button id="btn-chat-trigger" title="触发语音对话">🎙️</button>
+  </div>
+  <div class="card" style="margin-top:10px">
+    <h3>API 设置</h3>
+    <div class="config-row">
+      <label>LLM API Key <input type="password" id="cfg-llm-key" placeholder="sk-..."></label>
+      <button id="btn-cfg-save" class="btn-primary">保存</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 表情选择器 (浮动) ============ -->
+<div id="face-bar">
+  <button class="face-btn" data-expr="0">😐</button>
+  <button class="face-btn" data-expr="1">😊</button>
+  <button class="face-btn" data-expr="2">😢</button>
+  <button class="face-btn" data-expr="3">😠</button>
+  <button class="face-btn" data-expr="4">😮</button>
+  <button class="face-btn" data-expr="5">😉</button>
+  <button class="face-btn" data-expr="6">❤️</button>
+  <button class="face-btn" data-expr="7">😴</button>
+  <button class="face-btn" data-expr="8">😕</button>
+  <button class="face-btn" data-expr="9">🤩</button>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
